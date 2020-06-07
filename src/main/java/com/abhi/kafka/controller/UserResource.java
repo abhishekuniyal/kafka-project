@@ -24,6 +24,12 @@ public class UserResource {
 	@GetMapping("/post/{name}")
 	@Async
 	public User post(@PathVariable("name") final String name) {
+		/**while going for Async , u can use below configs. Also while using Aycn u might loose the ordering
+		 * 
+		 * synchronous send
+		 * max.in.flight.requests.per.connection
+		 
+		 */
 		User user = new User(name, "Tech", 20000000L);
 		ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, user);
 		future.addCallback(new ListenableFutureCallback<SendResult<String, Object>>() {
