@@ -26,7 +26,7 @@ A very old producer-consumer IT problem could be easily solved using apache kafk
 
 ********************************Fault tolerance ******************************************************
 Producer config acks flag ==> 0,    ==> producer will not wait for ACK , highest throughput, chances of data lost
-							  1,	==> producer will wait for ACK , slightly lower throughput, lower chances of data lost(If leader sends ACK but leader crashes before passing data to followeres , Data is lost even after the ACK)
+							  1,	==> producer will wait for ACK , slightly lower throughput, lower chances of data lost(If leader sends ACK but leader crashes before passing data to followers , Data is lost even after the ACK)
 							  all   ==> producer will wait for ACK , slightly lower throughput, No chance of data lost 
 
 ********************************Fault tolerance ******************************************************
@@ -51,7 +51,24 @@ how can we achieve this in kafka? ==> Leader will have main copy - follower will
 ./bin/kafka-topics.sh --create --zookeeper localhost:2181 --describe --topic TOPIC   which will show you below,
 	Topic: TOPIC Partition:0, Leader: 1, Replicas:1,2,0 , ISR: 1,2,0 (In-sync-Replicas i.e all broker is in sync with leader)
 	Topic: TOPIC Partition:1, Leader: 2, Replicas:2,0,1 , ISR: 2,0,1
+	
+**********************Rebalancing********************
+commited offset Avoids to send the same record to new COnsumer in case of partition re-balancing 
+current offset: sent records (already read by consumers)
+commited offset	: Processed records (already committed by consumers)
 
+ways to commit offset:
+Auto Commit:
+	enable.auto.commit : bydeafault true
+	auto.commit.interval.ms
+Manual Commit:(commit asyn/commit sync)
+	enable.auto.commit = false
+	
+	in COnsumer try{}
+				finally{ consumer.commit(/A)Sync();} 
 
-							  
+Kafka provides ConsumerrebalanceListner class with 2 methods
+			onPartitionsRevoked()   ==> consumer can commit offset before Group co-ordinator takes partiotion from it.
+			onPartitionsAssigned()
+									  
 							  
