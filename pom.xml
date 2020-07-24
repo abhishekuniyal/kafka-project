@@ -50,7 +50,18 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 	</dependencies>
-
+<distributionManagement>
+  <repository>
+    <id>releases</id>
+    <!-- CHANGE HERE by your team nexus server -->
+    <url>http://localhost:8081/repository/kafka-repo/</url>
+  </repository>
+  <snapshotRepository>
+    <id>snapshots</id>
+    <!-- CHANGE HERE by your team nexus server -->
+    <url>http://localhost:8081/repository/kafka-repo/</url>
+  </snapshotRepository>
+</distributionManagement>
 	<build>
 		<plugins>
 			<plugin>
