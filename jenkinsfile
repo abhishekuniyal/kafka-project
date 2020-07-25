@@ -6,6 +6,10 @@ pipeline {
     }
     environment{
         NEW_VERSION = '1.2.0'
+        PROJECT_ID = 'geometric-bay-284203'
+        CLUSTER_NAME = 'k8-cluster1'
+        LOCATION = 'asia-southeast1-b'
+        CREDENTIALS_ID = 'kubernetes'
     }
     stages {
         stage('scm') {
@@ -14,6 +18,7 @@ pipeline {
                 git 'https://github.com/abhishekuniyal/kafka-project.git'
                 
                 echo "Building version : ${NEW_VERSION}"
+                echo "Building Number : ${BUILD_NUMBER}"
             }
         }
         stage('Compile') {
@@ -31,6 +36,7 @@ pipeline {
                 sh label: '', script: 'mvn clean package'
             }
         }
+        
         stage('Push to Nexus'){
             steps{
                nexusArtifactUploader artifacts: [
@@ -52,7 +58,7 @@ pipeline {
         
         stage('Build docker image'){
             steps{
-             sh 'docker build -t abhi517/kafka-project:2.0.0 .'   
+             sh 'docker build -t abhi517/kafka-project:${BUILD_NUMBER} .'   
             }
             
         }
@@ -62,15 +68,29 @@ pipeline {
                 withCredentials([string(credentialsId: 'dockerPass', variable: 'DockerHub')]) {
                     sh 'docker login -u abhi517 -p  ${DockerHub}'
                 }
-                    
-             
             }
-            
         }
+        
         stage('Push to docker hub'){
             steps{
-             sh 'docker push abhi517/kafka-project:2.0.0'
+             sh 'docker push abhi517/kafka-project:${BUILD_NUMBER}'
             }
         }
+        stage('Deploy to K8s') { 
+                steps{
+                   echo "Deployment started ..."
+		   sh 'ls -ltr'
+		   sh 'pwd'
+		   sh "sed -i 's/tagversion/${BUILD_NUMBER}/g' deployment.yaml"
+                   step([$class: 'KubernetesEngineBuilder', 
+                            projectId: env.PROJECT_ID, 
+                            clusterName: env.CLUSTER_NAME, 
+                            location: env.LOCATION, 
+                            manifestPattern: 'deployment.yaml',
+                            credentialsId: env.CREDENTIALS_ID, 
+                            verifyDeployments: true])
+		   echo "Deployment Finished ..."
+            }
+	   }
     }
 }
