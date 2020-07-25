@@ -1,0 +1,76 @@
+pipeline {
+    agent any
+    
+    tools{
+        maven 'Maven'
+    }
+    environment{
+        NEW_VERSION = '1.2.0'
+    }
+    stages {
+        stage('scm') {
+            steps {
+                echo BUILD_NUMBER;
+                git 'https://github.com/abhishekuniyal/kafka-project.git'
+                
+                echo "Building version : ${NEW_VERSION}"
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh label: '', script: 'mvn clean compile'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh label: '', script: 'mvn clean test'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh label: '', script: 'mvn clean package'
+            }
+        }
+        stage('Push to Nexus'){
+            steps{
+               nexusArtifactUploader artifacts: [
+                                    [
+                                        artifactId: 'kafka-project',
+                                        classifier: '', 
+                                        file: 'target/kafka-project-0.0.1-SNAPSHOT.jar',
+                                        type: 'jar'
+                                    ]
+                                ], credentialsId: 'admin',
+                                        groupId: 'com.abhi',
+                                        nexusUrl: 'localhost:8081',
+                                        nexusVersion: 'nexus3', 
+                                        protocol: 'http', 
+                                        repository: 'kafka-repo',
+                                        version: '0.0.1-SNAPSHOT'
+            }
+        }
+        
+        stage('Build docker image'){
+            steps{
+             sh 'docker build -t abhi517/kafka-project:2.0.0 .'   
+            }
+            
+        }
+        
+        stage('Login to docker hub'){
+            steps{
+                withCredentials([string(credentialsId: 'dockerPass', variable: 'DockerHub')]) {
+                    sh 'docker login -u abhi517 -p  ${DockerHub}'
+                }
+                    
+             
+            }
+            
+        }
+        stage('Push to docker hub'){
+            steps{
+             sh 'docker push abhi517/kafka-project:2.0.0'
+            }
+        }
+    }
+}
