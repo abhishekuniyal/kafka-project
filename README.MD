@@ -1,4 +1,55 @@
-Steps to run this project::::
+**Kafka 
+
+Kafka is a distributed messgaing stream platform that uses pulish and subscribe mechanism to stream the records.
+
+Kafka architecture
+
+![](images/kafaka architecture.png)
+
+Important components of Kafka::
+1.) Zookerper cluster: responsible to monitor Kafka cluster & co-ordinate with each broker.
+			keeps all metadata info related to Kafka clusterin the form of key-value pair.
+			Used for the controller election with kafka cluster.
+			A set of zookeper nodes to manage distributed system are known as Zookere cluster
+2.) TOPIC : A set of messages belongs to the particular category. must be UNIQUE
+3.) Partitions: Topics are split in partitions. 
+		All the messages within partition is ordered and immutable.
+		Each messgae within a partition will have a unique ID associated known as OFFSET.
+4.) Replica & Replication:
+		Replicas are backup of partitions
+		Replicas are never read or write. used to prevent data loss (Fault tolerance)
+e.g partition=3, broker =3 & replicas=2 => means 9messages from 1 topic wil be distributed 3 messages each partition(P0,P1,P2). each partition will be available on 2 brokers a a time . possibility B0=>P0,P2, B1=> P1,P2, B3 => P3,P0
+
+5.) Producers: Applications which sends the data to Topic or partitions directly
+6.) Consumers: Applications which consumes the data to Topic or partitions directly. Always will be associated to Consumer group
+
+7.) Brokers: are simple software processes which maintain & manage the published messages
+		Also known as Kafka servers
+		Brokers also manages the CONSUMER OFFSET and are responsible for the delivery of messages to the right consumers.
+		A set of Brokers who are communicating with each other to perform the management & maintain tasks are collectively known as 			"KAFKA CLUSTER". we always can add more cluster without any downtime.
+	
+Core API's provide by Kafka:
+Producer API's	
+Consumer API's
+Streams API's
+Connector API's
+Admin API's
+
+
+****Imp OFFSETS
+The records in the PARTITIONS are each assigned a sequential id number called  the OFFSET tha uniqely identifies each record within the partition.
+
+varients of offset:
+* Log-end offset: Offset of the last message written in the partition i.e total no of messages in partition
+* current offset: pointer to the last record that Kafka has already sent to a consumer in the most recent poll. i.e how many messages sent to the consumer group tilll now.
+* commited offset: Marking an offset as consumed is called commiting an offset(Commited offset). i.e how many of sent messages to consumer group Have kafka cluster got the ACK that message has been consumed.
+ACK --> (1. auto-commit , 2 -> Manual commit (2.1 send commit for each n every message as soon as consumed 2.2 wait for 15-20 messgaes(batch) and send ACK for that particular batch at once)
+
+producer(sends {key:null,payload:"message"} --> what Broker saves {key, payload, topic, partition, offset, timestamp}
+if key is non-null only specific partition will get the data , if null then in round robin data will be sent to partition
+
+Consumer group rebalancing -> if any consumer adds/removes from a consumer group. if any partion add/removes
+****** Steps to run this project *********
 A very old producer-consumer IT problem could be easily solved using apache kafka, a highly throughput distributed streaming platform.  
 
 1.) download apache kafka
@@ -9,6 +60,8 @@ A very old producer-consumer IT problem could be easily solved using apache kafk
 	by deafult zookeeper instance will run at 0.0.0.0:2181
 4.) start the kafka instance
 	./bin/kafka-server-start.sh config/server.properties
+	some imp variables in server.prop u need to change:
+	broker.id, listners(this broker will listne on this port),zooker.connect(zookerpaddress), logs.dir(where msgs stores), log.retentions.hours
 	deafult : localhost:9092
 
 5.) create two new TOPIC
